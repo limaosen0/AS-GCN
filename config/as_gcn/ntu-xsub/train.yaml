@@ -1,16 +1,16 @@
-work_dir: ./work_dir/recognition/ntu-xsub/ST_GCN
+work_dir: ./work_dir/recognition/ntu-xsub/AS_GCN
 
 feeder: feeder.feeder.Feeder
 train_feeder_args:
-  data_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/train_data.npy
-  label_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/train_label.pkl
+  data_path: ./data/NTU-RGB-D/xsub/train_data.npy
+  label_path: ./data/NTU-RGB-D/xsub/train_label.pkl
   random_move: False
 test_feeder_args:
-  data_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/val_data.npy
-  label_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/val_label.pkl
+  data_path: ./data/NTU-RGB-D/xsub/val_data.npy
+  label_path: ./data/NTU-RGB-D/xsub/val_label.pkl
 
 
-model: net.st_gcn.Model
+model: net.as_gcn.Model
 model_args:
   n_in_enc: 150
   n_hid_enc: 128
@@ -27,7 +27,7 @@ model_args:
     strategy: 'spatial'
     max_hop: 4
 
-# weights: ./work_dir/recognition/ntu-xsub/ST_GCN/epoch2_model.pt
+# weights: ./work_dir/recognition/ntu-xsub/AS_GCN/epoch2_model.pt
 
 w_pred: 1.
 weight_decay: 0.0001

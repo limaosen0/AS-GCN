@@ -15,15 +15,12 @@ Abstract: Action recognition with skeleton data has recently attracted much atte
 
 # Citation
 If you use this code, please cite our paper:
- 
 ```
-@ARTICLE{sss,
-author={Ya\u{g}{\i}z Aksoy and Tae-Hyun Oh and Sylvain Paris and Marc Pollefeys and Wojciech Matusik},
-title={Semantic Soft Segmentation},
-journal={ACM Transactions on Graphics (Proc. SIGGRAPH)},
-year={2018},
-pages = {72:1-72:13},
-volume = {37},
-number = {4}
+@InProceedings{Li_2019_CVPR,
+author = {Li, Maosen and Chen, Siheng and Chen, Xu and Zhang, Ya and Wang, Yanfeng and Tian, Qi},
+title = {Actional-Structural Graph Convolutional Networks for Skeleton-Based Action Recognition},
+booktitle = {The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2019}
 }
 ```

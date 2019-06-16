@@ -18,6 +18,9 @@ Train: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
 Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 ```
 
+# Environments
+We use the similar IO and system configuration like ST-GCN, where the torchlight module should be set up.
+
 
 # Citation
 If you use this code, please cite our paper:

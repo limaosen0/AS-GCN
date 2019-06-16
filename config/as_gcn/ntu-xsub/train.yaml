@@ -1,7 +1,7 @@
-work_dir: ./work_dir/recognition/ntu-xsub/ST_GCN
+work_dir: ./work_dir/recognition/ntu-xsub/AS_GCN
 
-# weights1: ./work_dir/recognition/ntu-xsub/ST_GCN/epoch9_model1.pt
-# weights2: ./work_dir/recognition/ntu-xsub/ST_GCN/epoch9_model2.pt
+# weights1: ./work_dir/recognition/ntu-xsub/AS_GCN/epoch19_model1.pt
+# weights2: ./work_dir/recognition/ntu-xsub/AS_GCN/epoch19_model2.pt
 
 feeder: feeder.feeder.Feeder
 train_feeder_args:
@@ -11,7 +11,7 @@ test_feeder_args:
   data_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/val_data.npy
   label_path: ../p3d_gcn_pytorch/data/NTU-RGB-D/xsub/val_label.pkl
 
-model1: net.st_gcn.Model
+model1: net.as_gcn.Model
 model1_args:
   in_channels: 3
   num_class: 60

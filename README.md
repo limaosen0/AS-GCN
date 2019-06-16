@@ -12,6 +12,12 @@ Abstract: Action recognition with skeleton data has recently attracted much atte
 * argparse
 * numpy
 
+# Training and Testing
+```
+Train: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
+Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
+```
+
 
 # Citation
 If you use this code, please cite our paper:

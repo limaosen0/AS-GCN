@@ -17,6 +17,8 @@ Abstract: Action recognition with skeleton data has recently attracted much atte
 Train: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
 Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 ```
+# Data
+For NTU-RGB+D dataset, you can download it from [NTU-RGB+D](http://rose1.ntu.edu.sg/datasets/actionrecognition.asp).
 
 # Environments
 We use the similar input/output interface and system configuration like ST-GCN, where the torchlight module should be set up.

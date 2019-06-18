@@ -21,7 +21,10 @@ Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 For NTU-RGB+D dataset, you can download it from [NTU-RGB+D](http://rose1.ntu.edu.sg/datasets/actionrecognition.asp).
 
 # Environments
-We use the similar input/output interface and system configuration like ST-GCN, where the torchlight module should be set up.
+We use the similar input/output interface and system configuration like ST-GCN, where the torchlight module should be set up. Run
+```
+cd torchlight, python setup.py, cd ..
+```
 
 
 # Citation

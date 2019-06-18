@@ -1,4 +1,4 @@
-This reposity contains the implementation code of:
+This repository contains the implementation of:
 Actional-Structural Graph Convolutional Networks for Skeleton-based Action Recognition. [Paper](https://arxiv.org/pdf/1904.12659.pdf)
 
 ![image](https://github.com/limaosen0/AS-GCN/blob/master/img/pipeline.png)

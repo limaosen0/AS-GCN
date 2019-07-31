@@ -40,7 +40,7 @@ model2_args:
 weight_decay: 0.0001
 base_lr1: 0.1
 base_lr2: 0.0005
-step: [40, 70, 90]
+step: [50, 70, 90]
 
 device: [0,1,2,3]
 batch_size: 32

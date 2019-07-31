@@ -1,0 +1,48 @@
+work_dir: ./work_dir/recognition/ntu-xview/AS_GCN
+weights1: ./work_dir/recognition/ntu-xview/AS_GCN/max_hop_4/lamda_05/epoch99_model1.pt
+weights2: ./work_dir/recognition/ntu-xview/AS_GCN/max_hop_4/lamda_05/epoch99_model2.pt
+
+feeder: feeder.feeder.Feeder
+train_feeder_args:
+  data_path: ./data/nturgb_d/xview/train_data_joint_pad.npy
+  label_path: ./data/nturgb_d/xview/train_label.pkl
+  random_move: True
+  repeat_pad: True
+  down_sample: True
+test_feeder_args:
+  data_path: ./data/nturgb_d/xview/val_data_joint_pad.npy
+  label_path: ./data/nturgb_d/xview/val_label.pkl
+  random_move: False
+  repeat_pad: True
+  down_sample: True
+
+model1: net.as_gcn.Model
+model1_args:
+  in_channels: 3
+  num_class: 60
+  dropout: 0.5
+  edge_importance_weighting: True
+  graph_args:
+    layout: 'ntu-rgb+d'
+    strategy: 'spatial'
+    max_hop: 4
+
+model2: net.utils.adj_learn.AdjacencyLearn
+model2_args:
+  n_in_enc: 150
+  n_hid_enc: 128
+  edge_types: 3
+  n_in_dec: 3
+  n_hid_dec: 128
+  node_num: 25
+
+device: [0,1,2,3]
+batch_size: 32
+test_batch_size: 32
+num_worker: 4
+
+max_hop_dir: max_hop_4
+lamda_act_dir: lamda_05
+lamda_act: 0.5
+
+phase: test

@@ -44,13 +44,13 @@ class Processor(IO):
             self.data_loader['train'] = torch.utils.data.DataLoader(dataset=Feeder(**self.arg.train_feeder_args),
                                                                     batch_size=self.arg.batch_size,
                                                                     shuffle=True,
-                                                                    num_workers=self.arg.num_worker * torchlight.ngpu(self.arg.device),
+                                                                    num_workers=self.arg.num_worker,
                                                                     drop_last=True)
         if self.arg.test_feeder_args:
             self.data_loader['test'] = torch.utils.data.DataLoader(dataset=Feeder(**self.arg.test_feeder_args),
                                                                    batch_size=self.arg.test_batch_size,
                                                                    shuffle=False,
-                                                                   num_workers=self.arg.num_worker * torchlight.ngpu(self.arg.device))
+                                                                   num_workers=self.arg.num_worker)
 
     def show_epoch_info(self):
         for k, v in self.epoch_info.items():
@@ -127,20 +127,17 @@ class Processor(IO):
                         self.test(testing_A=False)
                     self.io.print_log('Done.') 
 
-        # test phase
+
         elif self.arg.phase == 'test':
-            # the path of weights must be appointed
             if self.arg.weights2 is None:
                 raise ValueError('Please appoint --weights.')
             self.io.print_log('Model:   {}.'.format(self.arg.model2))
             self.io.print_log('Weights: {}.'.format(self.arg.weights2))
 
-            # evaluation
             self.io.print_log('Evaluation Start:')
             self.test(testing_A=False, save_feature=True)
             self.io.print_log('Done.\n')
 
-            # save the output of model
             if self.arg.save_result:
                 result_dict = dict(
                     zip(self.data_loader['test'].dataset.sample_name,
@@ -151,14 +148,11 @@ class Processor(IO):
     @staticmethod
     def get_parser(add_help=False):
 
-        #region arguments yapf: disable
-        # parameter priority: command line > config > default
         parser = argparse.ArgumentParser( add_help=add_help, description='Base Processor')
 
         parser.add_argument('-w', '--work_dir', default='./work_dir/tmp', help='the work folder for storing results')
         parser.add_argument('-c', '--config', default=None, help='path to the configuration file')
 
-        # processor
         parser.add_argument('--phase', default='train', help='must be train or test')
         parser.add_argument('--save_result', type=str2bool, default=False, help='if ture, the output of the model will be stored')
         parser.add_argument('--start_epoch', type=int, default=0, help='start training from which epoch')
@@ -166,7 +160,6 @@ class Processor(IO):
         parser.add_argument('--use_gpu', type=str2bool, default=True, help='use GPUs or not')
         parser.add_argument('--device', type=int, default=0, nargs='+', help='the indexes of GPUs for training or testing')
 
-        # visulize and debug
         parser.add_argument('--log_interval', type=int, default=100, help='the interval for printing messages (#iteration)')
         parser.add_argument('--save_interval', type=int, default=1, help='the interval for storing models (#iteration)')
         parser.add_argument('--eval_interval', type=int, default=5, help='the interval for evaluating models (#iteration)')
@@ -174,7 +167,6 @@ class Processor(IO):
         parser.add_argument('--print_log', type=str2bool, default=True, help='print logging or not')
         parser.add_argument('--pavi_log', type=str2bool, default=False, help='logging on pavi or not')
 
-        # feeder
         parser.add_argument('--feeder', default='feeder.feeder', help='data loader will be used')
         parser.add_argument('--num_worker', type=int, default=4, help='the number of worker per gpu for data loader')
         parser.add_argument('--train_feeder_args', action=DictAction, default=dict(), help='the arguments of data loader for training')
@@ -183,7 +175,6 @@ class Processor(IO):
         parser.add_argument('--test_batch_size', type=int, default=256, help='test batch size')
         parser.add_argument('--debug', action="store_true", help='less data, faster loading')
 
-        # model
         parser.add_argument('--model1', default=None, help='the model will be used')
         parser.add_argument('--model2', default=None, help='the model will be used')
         parser.add_argument('--model1_args', action=DictAction, default=dict(), help='the arguments of model')
@@ -191,6 +182,5 @@ class Processor(IO):
         parser.add_argument('--weights1', default=None, help='the weights for network initialization')
         parser.add_argument('--weights2', default=None, help='the weights for network initialization')
         parser.add_argument('--ignore_weights', type=str, default=[], nargs='+', help='the name of weights which will be ignored in the initialization')
-        #endregion yapf: enable
 
         return parser

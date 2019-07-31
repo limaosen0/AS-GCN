@@ -1,4 +1,5 @@
 import sys
+import os
 import argparse
 import yaml
 import numpy as np
@@ -44,10 +45,10 @@ class IO():
         self.arg = parser.parse_args(argv)
 
     def init_environment(self):
-        self.io = torchlight.IO(
-            self.arg.work_dir,
-            save_log=self.arg.save_log,
-            print_log=self.arg.print_log)
+        self.save_dir = os.path.join(self.arg.work_dir,
+                                     self.arg.max_hop_dir,
+                                     self.arg.lamda_act_dir)
+        self.io = torchlight.IO(self.save_dir, save_log=self.arg.save_log, print_log=self.arg.print_log)
         self.io.save_arg(self.arg)
 
         # gpu

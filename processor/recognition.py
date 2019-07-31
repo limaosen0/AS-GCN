@@ -44,9 +44,9 @@ class REC_Processor(Processor):
 
         self.loss_class = nn.CrossEntropyLoss()
         self.loss_pred = nn.MSELoss()
-        self.w_pred = 10
+        self.w_pred = 0.01
 
-        prior = np.array([0.91, 0.03, 0.03, 0.03])
+        prior = np.array([0.95, 0.05/2, 0.05/2])
         self.log_prior = torch.FloatTensor(np.log(prior))
         self.log_prior = torch.unsqueeze(torch.unsqueeze(self.log_prior, 0), 0)
 
@@ -77,13 +77,6 @@ class REC_Processor(Processor):
         else:
             self.lr = self.arg.base_lr1
         self.lr2 = self.arg.base_lr2
-
-    def show_topk(self, k):
-        rank = self.result.argsort()
-        hit_top_k = [l in rank[i, -k:] for i, l in enumerate(self.label)]
-        accuracy = sum(hit_top_k) * 1.0 / len(hit_top_k)
-        self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
-
 
     def nll_gaussian(self, preds, target, variance, add_const=False):
         neg_log_p = ((preds-target)**2/(2*variance))
@@ -154,18 +147,20 @@ class REC_Processor(Processor):
             for param1 in self.model1.parameters():
                 param1.requires_grad = True
             for param2 in self.model2.parameters():
-                param2.requires_grad = False
+                param2.requires_grad = True
             self.iter_info.clear()
             self.epoch_info.clear()
             for data, data_downsample, target_data, data_last, label in loader:
                 data = data.float().to(self.dev)
                 data_downsample = data_downsample.float().to(self.dev)
+                target_data = target_data.float().to(self.dev)
+                data_last = data_last.float().to(self.dev)
                 label = label.long().to(self.dev)
 
                 A_batch, prob, outputs, _ = self.model2(data_downsample)
-                data_bn, output, pred = self.model1(data, A_batch)
-                loss_class = self.loss_class(output, label)
-                loss_recon = self.loss_pred(pred, target_data)
+                x_class, pred, target = self.model1(data, target_data, data_last, A_batch, self.arg.lamda_act)
+                loss_class = self.loss_class(x_class, label)
+                loss_recon = self.loss_pred(pred, target)
                 loss1 = loss_class + self.w_pred*loss_recon
 
                 self.optimizer1.zero_grad()
@@ -224,7 +219,7 @@ class REC_Processor(Processor):
                     gpu_id = data.get_device()
                     self.log_prior = self.log_prior.cuda(gpu_id)
                     loss_nll = self.nll_gaussian(outputs, data_bn[:,:,1:,:], variance=5e-4)
-                    loss_kl = self.kl_categorical(prob, self.log_prior, num_atoms=25)
+                    loss_kl = self.kl_categorical(prob, self.log_prior, num_node=25)
                     loss2 = loss_nll + loss_kl
 
                     loss2_value.append(loss2.item())
@@ -248,21 +243,23 @@ class REC_Processor(Processor):
             for data, data_downsample, target_data, data_last, label in loader:
                 data = data.float().to(self.dev)
                 data_downsample = data_downsample.float().to(self.dev)
+                target_data = target_data.float().to(self.dev)
+                data_last = data_last.float().to(self.dev)
                 label = label.long().to(self.dev)
 
                 with torch.no_grad():
                     A_batch, prob, outputs, _ = self.model2(data_downsample)
-                    data_bn, output, pred = self.model1(data, A_batch)
-                result_frag.append(output.data.cpu().numpy())
+                    x_class, pred, target = self.model1(data, target_data, data_last, A_batch, self.arg.lamda_act)
+                result_frag.append(x_class.data.cpu().numpy())
 
                 if save:
-                    n = pred.size(0)                        # pred: [2N, 3, 300, 25]
-                    p = pred[::2,:,:,:].cpu().numpy()       # [N, 3, 300, 25]
+                    n = pred.size(0)                      
+                    p = pred[::2,:,:,:].cpu().numpy()      
                     recon_data.extend(p)
 
                 if evaluation:
-                    loss_class = self.loss_class(output, label)
-                    loss_recon = self.loss_pred(pred, data_bn)
+                    loss_class = self.loss_class(x_class, label)
+                    loss_recon = self.loss_pred(pred, target)
                     loss1 = loss_class + self.w_pred*loss_recon
 
                     loss1_value.append(loss1.item())
@@ -274,10 +271,6 @@ class REC_Processor(Processor):
                 recon_data = np.array(recon_data)
                 np.save(os.path.join(self.arg.work_dir, 'recon_data.npy'), recon_data)
 
-            # if save_feature:
-            #     feature_map = np.array(feature_map)
-            #     np.save(os.path.join(self.arg.work_dir, 'h8.npy'), feature_map)
-
 
             self.result = np.concatenate(result_frag)
             if evaluation:
@@ -286,29 +279,37 @@ class REC_Processor(Processor):
                 self.epoch_info['mean_loss_class'] = np.mean(loss_class_value)
                 self.epoch_info['mean_loss_recon'] = np.mean(loss_recon_value)
                 self.show_epoch_info()
+
                 for k in self.arg.show_topk:
-                    self.show_topk(k)
+                    hit_top_k = []
+                    rank = self.result.argsort()
+                    for i,l in enumerate(self.label):
+                        hit_top_k.append(l in rank[i, -k:])
+                    self.io.print_log('\n')
+                    accuracy = sum(hit_top_k)*1.0/len(hit_top_k)
+                    self.io.print_log('\tTop{}: {:.2f}%'.format(k, 100 * accuracy))
+
 
 
     @staticmethod
     def get_parser(add_help=False):
 
-        # parameter priority: command line > config > default
         parent_parser = Processor.get_parser(add_help=False)
         parser = argparse.ArgumentParser(
             add_help=add_help,
             parents=[parent_parser],
             description='Spatial Temporal Graph Convolution Network')
 
-        # region arguments yapf: disable
-        # evaluation
         parser.add_argument('--show_topk', type=int, default=[1, 5], nargs='+', help='which Top K accuracy will be shown')
-        parser.add_argument('--base_lr1', type=float, default=0.01, help='initial learning rate')
+        parser.add_argument('--base_lr1', type=float, default=0.1, help='initial learning rate')
         parser.add_argument('--base_lr2', type=float, default=0.0005, help='initial learning rate')
         parser.add_argument('--step', type=int, default=[], nargs='+', help='the epoch where optimizer reduce the learning rate')
         parser.add_argument('--optimizer', default='SGD', help='type of optimizer')
         parser.add_argument('--nesterov', type=str2bool, default=True, help='use nesterov or not')
         parser.add_argument('--weight_decay', type=float, default=0.0001, help='weight decay for optimizer')
-        # endregion yapf: enable
+
+        parser.add_argument('--max_hop_dir', type=str, default='max_hop_4')
+        parser.add_argument('--lamda_act', type=float, default=0.5)
+        parser.add_argument('--lamda_act_dir', type=str, default='lamda_05')
 
         return parser

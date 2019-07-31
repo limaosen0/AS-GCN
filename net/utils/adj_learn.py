@@ -136,12 +136,12 @@ class InteractionNet(nn.Module):
 			x = self.mlp3(x)
 			x = torch.cat((x, x_skip), dim=2)
 			x = self.mlp4(x)
-		return self.fc_out(x)                                  # [N, 600, 256] -> [N, 600, 4]
+		return self.fc_out(x)                                  # [N, 600, 256] -> [N, 600, 3]
 
 
 class InteractionDecoderRecurrent(nn.Module):
 	
-	def __init__(self, n_in_node, edge_types, n_hid, do_prob=0., skip_first=False):
+	def __init__(self, n_in_node, edge_types, n_hid, do_prob=0., skip_first=True):
 		super().__init__()
 
 		self.msg_fc1 = nn.ModuleList([nn.Linear(2 * n_hid, n_hid) for _ in range(edge_types)])
@@ -169,7 +169,7 @@ class InteractionDecoderRecurrent(nn.Module):
 		receivers = torch.matmul(rel_rec, hidden)
 		senders = torch.matmul(rel_send, hidden)
 		pre_msg = torch.cat([receivers, senders], dim=-1)
-		all_msgs = Variable(torch.zeros(pre_msg.size(0), pre_msg.size(1), self.msg_out_shape))
+		all_msgs = torch.zeros(pre_msg.size(0), pre_msg.size(1), self.msg_out_shape)
 		gpu_id = rel_rec.get_device()
 		all_msgs = all_msgs.cuda(gpu_id)
 		if self.skip_first_edge_type:
@@ -209,23 +209,12 @@ class InteractionDecoderRecurrent(nn.Module):
 		hidden = hidden.cuda(gpu_id)
 		pred_all = []
 		for step in range(0, inputs.size(1) - 1):
-			if burn_in:
-				if step <= burn_in_steps:    # step<=50-10=40
-					ins = inputs[:, step, :, :]
-				else:
-					ins = pred_all[step - 1]
+			if not step % pred_steps:
+				ins = inputs[:, step, :, :]
 			else:
-				assert (pred_steps <= time_steps)
-				if not step % pred_steps:
-					ins = inputs[:, step, :, :]
-				else:
-					ins = pred_all[step - 1]
-			if dynamic_graph and step >= burn_in_steps:
-				logits = encoder(data[:, :, step-burn_in_steps:step, :].contiguous(), rel_rec, rel_send)
-				rel_type = gumbel_softmax(logits, tau=temp, hard=True)
+				ins = pred_all[step - 1]
 			pred, hidden = self.single_step_forward(ins, rel_rec, rel_send, rel_type, hidden)
 			pred_all.append(pred)
-
 		preds = torch.stack(pred_all, dim=1)
 		return preds.transpose(1, 2).contiguous()
 
@@ -235,14 +224,13 @@ class AdjacencyLearn(nn.Module):
 	def __init__(self, n_in_enc, n_hid_enc, edge_types, n_in_dec, n_hid_dec, node_num=25):
 		super().__init__()
 
-		self.data_bn = nn.BatchNorm1d(3*node_num)
 		self.encoder = InteractionNet(n_in=n_in_enc,                        # 150
 			                          n_hid=n_hid_enc,                      # 256
-			                          n_out=edge_types,                     # 4
+			                          n_out=edge_types,                     # 3
 			                          do_prob=0.5,
 			                          factor=True)
 		self.decoder = InteractionDecoderRecurrent(n_in_node=n_in_dec,      # 256
-			                                       edge_types=edge_types,   # 4
+			                                       edge_types=edge_types,   # 3
 			                                       n_hid=n_hid_dec,         # 256
 			                                       do_prob=0.5,
 			                                       skip_first=True)
@@ -251,6 +239,7 @@ class AdjacencyLearn(nn.Module):
 		off_diag = np.ones([node_num, node_num])-np.eye(node_num, node_num)
 		self.rel_rec = torch.FloatTensor(np.array(encode_onehot(np.where(off_diag)[1]), dtype=np.float32))
 		self.rel_send = torch.FloatTensor(np.array(encode_onehot(np.where(off_diag)[0]), dtype=np.float32))
+		self.dcy = 0.1
 
 		self.init_weights()
 
@@ -264,24 +253,17 @@ class AdjacencyLearn(nn.Module):
 
 		N, C, T, V, M = inputs.size()
 		x = inputs.permute(0, 4, 3, 1, 2).contiguous() # [N, 2, 25, 3, 50]
-		x = x.view(N * M, V * C, T)                    # [2N, 75, 50]
-		x_bn = self.data_bn(x)
-		x_bn = x_bn.view(N, M, V, C, T)                # [N, 2, 25, 3, 50]
-		x_bn = x_bn.permute(0, 1, 3, 4, 2).contiguous()# [N, 2, 3, 50, 25]
-		x_bn = x_bn.view(N * M, C, T, V)               # [2N, 3, 50, 25]
-		x_bn = x_bn.permute(0, 3, 2, 1)                # [2N, 25, 50, 3]
-
 		x = x.contiguous().view(N*M, V, C, T).permute(0,1,3,2)  # [2N, 25, 50, 3]
 
-		gpu_id = x_bn.get_device()
+		gpu_id = x.get_device()
 		rel_rec = self.rel_rec.cuda(gpu_id)
 		rel_send = self.rel_send.cuda(gpu_id)
 
-		self.logits = self.encoder(x_bn, rel_rec, rel_send)
+		self.logits = self.encoder(x, rel_rec, rel_send)
 		self.N, self.v, self.c = self.logits.size()
 		self.edges = gumbel_softmax(self.logits, tau=0.5, hard=True)
 		self.prob = my_softmax(self.logits, -1)
-		self.outputs = self.decoder(x_bn, self.edges, rel_rec, rel_send, burn_in=False, burn_in_steps=1)
+		self.outputs = self.decoder(x, self.edges, rel_rec, rel_send, burn_in=False, burn_in_steps=40)
 		self.offdiag_indices = self.offdiag_indices.cuda(gpu_id)
 
 		A_batch = []
@@ -290,12 +272,12 @@ class AdjacencyLearn(nn.Module):
 			for j in range(1, self.c):
 				A = torch.sparse.FloatTensor(self.offdiag_indices, self.edges[i,:,j], torch.Size([25, 25])).to_dense().cuda(gpu_id)
 				A = A + torch.eye(25, 25).cuda(gpu_id)
-				D = torch.sum(A, dim=0).squeeze().pow(-1)+1e-3
+				D = torch.sum(A, dim=0).squeeze().pow(-1)+1e-10
 				D = torch.diag(D)
-				A_ = torch.matmul(A, D)
+				A_ = torch.matmul(A, D)*self.dcy
 				A_types.append(A_)
 			A_types = torch.stack(A_types)
 			A_batch.append(A_types)
-		self.A_batch = torch.stack(A_batch).cuda(gpu_id) # [N, 3, 25, 25]
+		self.A_batch = torch.stack(A_batch).cuda(gpu_id) # [N, 2, 25, 25]
 
 		return self.A_batch, self.prob, self.outputs, x

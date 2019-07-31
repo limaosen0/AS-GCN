@@ -88,7 +88,7 @@ class Graph():
                     A.append(a_root + a_close)
                     A.append(a_further)
             A = np.stack(A)
-            self.A = A # [7, 25, 25]
+            self.A = A 
         else:
             raise ValueError("Do Not Exist This Strategy")
 

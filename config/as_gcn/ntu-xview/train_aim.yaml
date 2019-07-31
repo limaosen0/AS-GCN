@@ -43,7 +43,7 @@ device: [0,1,2,3]
 batch_size: 32
 test_batch_size: 32
 start_epoch: 0
-num_epoch: 20
+num_epoch: 10
 num_worker: 4
 
 max_hop_dir: max_hop_4

@@ -43,9 +43,9 @@ Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 
 For Cross-View,
 ```
-PretrainAIM: python main.py recognition -c config/as_gcn/ntu-xsub/train_aim.yaml
-TrainMainPipeline: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
-Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
+PretrainAIM: python main.py recognition -c config/as_gcn/ntu-xview/train_aim.yaml
+TrainMainPipeline: python main.py recognition -c config/as_gcn/ntu-xview/train.yaml
+Test: python main.py recognition -c config/as_gcn/ntu-xview/test.yaml
 ```
 
 # Acknowledgement

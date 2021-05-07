@@ -10,7 +10,6 @@ if __name__ == '__main__':
 
     processors = dict()
     processors['recognition'] = import_class('processor.recognition.REC_Processor')
-    #processors['recognition'] = import_class('processor.processor.Processor.io.__init__')
     #processors['demo'] = import_class('processor.demo.Demo')
 
     subparsers = parser.add_subparsers(dest='processor')
@@ -21,6 +20,5 @@ if __name__ == '__main__':
 
     # start
     Processor = processors[arg.processor]
-    print(sys.argv[:])
     p = Processor(sys.argv[2:])
     p.start()

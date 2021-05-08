@@ -16,10 +16,16 @@ In this repo, we show the example of model on NTU-RGB+D dataset.
 
 # Environments
 We use the similar input/output interface and system configuration like ST-GCN, where the torchlight module should be set up.
+```
+cd torchlight
+cp torchlight/torchlight/_init__.py  gpu.py  io.py ../
+```
+change all "from torchlight import ..." to
+"from torchlight.io import ..."
 
 Run
 ```
-cd torchlight, python setup.py, cd ..
+cd torchlight, python setup.py install, cd ..
 ```
 
 
@@ -30,13 +36,14 @@ For NTU-RGB+D dataset, you can download it from [NTU-RGB+D](http://rose1.ntu.edu
 ```
 Then, run the preprocessing program to generate the input data, which is very important.
 ```
-python ./data_gen/ntu_gen_preprocess.py
+cd data_gen
+python ntu_gen_preprocess.py
 ```
 
 # Training and Testing
 With this repo, you can pretrain AIM and save the module at first; then run the code to train the main pipleline of AS-GCN. For the recommended benchmark of Cross-Subject in NTU-RGB+D,
 ```
-PretrainAIM: python main.py recognition -c config/as_gcn/ntu-xsub/train_aim.yaml
+PretrainAIM: python main.py recognition -c config/as_gcn/ntu-xsub/train_aim.yaml --device 0 1 2
 TrainMainPipeline: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
 Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 ```

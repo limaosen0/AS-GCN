@@ -12,7 +12,6 @@ def visible_gpu(gpus):
     """
     gpus = [gpus] if isinstance(gpus, int) else list(gpus)
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(list(map(str, gpus)))
-    #os.environ['CUDA_VISIBLE_DEVICES'] = "0,1,2"
     return list(range(len(gpus)))
 
 

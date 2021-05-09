@@ -13,6 +13,7 @@ In this repo, we show the example of model on NTU-RGB+D dataset.
 * pyyaml
 * argparse
 * numpy
+* torch 1.7.1
 
 # Environments
 We use the similar input/output interface and system configuration like ST-GCN, where the torchlight module should be set up.
@@ -44,7 +45,8 @@ python ntu_gen_preprocess.py
 With this repo, you can pretrain AIM and save the module at first; then run the code to train the main pipleline of AS-GCN. For the recommended benchmark of Cross-Subject in NTU-RGB+D,
 ```
 PretrainAIM: python main.py recognition -c config/as_gcn/ntu-xsub/train_aim.yaml --device 0 1 2
-TrainMainPipeline: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml
+TrainMainPipeline: python main.py recognition -c config/as_gcn/ntu-xsub/train.yaml --device 0 --batch_size 4
+# only can use one gpu otherwise got the error "Caught RuntimeError in replica 0 on device 0""
 Test: python main.py recognition -c config/as_gcn/ntu-xsub/test.yaml
 ```
 

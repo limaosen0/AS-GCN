@@ -112,6 +112,7 @@ class REC_Processor(Processor):
             self.epoch_info.clear()
 
             for data, data_downsample, target_data, data_last, label in loader:
+                # data: (32,3,290,25,2) data_downsample:(32,3,50,25,2) target_data:(32,3,10,25,2) data_last:(32,3,1,25,2) label:(32)
                 data = data.float().to(self.dev)
                 data_downsample = data_downsample.float().to(self.dev)
                 label = label.long().to(self.dev)
@@ -158,6 +159,7 @@ class REC_Processor(Processor):
                 label = label.long().to(self.dev)
 
                 A_batch, prob, outputs, _ = self.model2(data_downsample)
+                # wsx
                 x_class, pred, target = self.model1(data, target_data, data_last, A_batch, self.arg.lamda_act)
                 loss_class = self.loss_class(x_class, label)
                 loss_recon = self.loss_pred(pred, target)

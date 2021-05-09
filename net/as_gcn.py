@@ -52,16 +52,16 @@ class Model(nn.Module):
     def forward(self, x, x_target, x_last, A_act, lamda_act):
 
         N, C, T, V, M = x.size()
-        x_recon = x[:,:,:,:,0]                                  # [2N, 3, 300, 25]
-        x = x.permute(0, 4, 3, 1, 2).contiguous()               # [N, 2, 25, 3, 300]
-        x = x.view(N * M, V * C, T)                             # [2N, 75, 300]
+        x_recon = x[:,:,:,:,0]                                  # [2N, 3, 300, 25]  wsx: x_recon(4,3,290,25) select the first person data?
+        x = x.permute(0, 4, 3, 1, 2).contiguous()               # [N, 2, 25, 3, 300] wsx: x(4,2,25,3,290)
+        x = x.view(N * M, V * C, T)                             # [2N, 75, 300]m wsx: x(8,75,290)
 
-        x_last = x_last.permute(0,4,1,2,3).contiguous().view(-1,3,1,25)
+        x_last = x_last.permute(0,4,1,2,3).contiguous().view(-1,3,1,25)  #(8,3,1,25)
         
         x_bn = self.data_bn(x)
         x_bn = x_bn.view(N, M, V, C, T)
         x_bn = x_bn.permute(0, 1, 3, 4, 2).contiguous()
-        x_bn = x_bn.view(N * M, C, T, V)
+        x_bn = x_bn.view(N * M, C, T, V) #2N,3,290,25
 
         h0, _ = self.class_layer_0(x_bn, self.A * self.edge_importance[0], A_act, lamda_act)       # [N, 64, 300, 25]
         h1, _ = self.class_layer_1(h0, self.A * self.edge_importance[1], A_act, lamda_act)         # [N, 64, 300, 25]
@@ -74,10 +74,12 @@ class Model(nn.Module):
         h7, _ = self.class_layer_7(h6, self.A * self.edge_importance[7], A_act, lamda_act)         # [N, 256, 75, 25]
         h8, _ = self.class_layer_8(h7, self.A * self.edge_importance[8], A_act, lamda_act)         # [N, 256, 75, 25]
 
-        x_class = F.avg_pool2d(h8, h8.size()[2:])
-        x_class = x_class.view(N, M, -1, 1, 1).mean(dim=1)
-        x_class = self.fcn(x_class)
-        x_class = x_class.view(x_class.size(0), -1)
+        x_class = F.avg_pool2d(h8, h8.size()[2:])  #(8,256,1,1)
+        x_class = x_class.view(N, M, -1, 1, 1).mean(dim=1) #(4,256,1,1)
+        #x_class = x_class.view(N, M, -1, 1, 1) #(4,2,256,1,1)
+        #x_class = x_class.mean(dim=1) #(4,256,1,1)
+        x_class = self.fcn(x_class) #(4,60,1,1)  Conv2d(256, 60, kernel_size=(1, 1), stride=(1, 1))
+        x_class = x_class.view(x_class.size(0), -1) #(4,60)
 
         r0, _ = self.recon_layer_0(h8, self.A*self.edge_importance_recon[0], A_act, lamda_act)                          # [N, 128, 75, 25]
         r1, _ = self.recon_layer_1(r0, self.A*self.edge_importance_recon[1], A_act, lamda_act)                          # [N, 128, 38, 25]
@@ -85,8 +87,8 @@ class Model(nn.Module):
         r3, _ = self.recon_layer_3(r2, self.A*self.edge_importance_recon[3], A_act, lamda_act)                          # [N, 128, 10, 25]
         r4, _ = self.recon_layer_4(r3, self.A*self.edge_importance_recon[4], A_act, lamda_act)                          # [N, 128, 5, 25]
         r5, _ = self.recon_layer_5(r4, self.A*self.edge_importance_recon[5], A_act, lamda_act)                          # [N, 128, 1, 25]
-        r6, _ = self.recon_layer_6(torch.cat((r5, x_last),1), self.A*self.edge_importance_recon[6], A_act, lamda_act)   # [N, 64, 1, 25]
-        pred = x_last.squeeze().repeat(1,10,1) + r6.squeeze()                                                  # [N, 3, 25]
+        r6, _ = self.recon_layer_6(torch.cat((r5, x_last),1), self.A*self.edge_importance_recon[6], A_act, lamda_act)   # [N, 64, 1, 25]  wsx:(8,30,1,25)
+        pred = x_last.squeeze().repeat(1,10,1) + r6.squeeze()                                                  # [N, 3, 25] wsx:(8,30,25)
 
         pred = pred.contiguous().view(-1, 3, 10, 25)
         x_target = x_target.permute(0,4,1,2,3).contiguous().view(-1,3,10,25)

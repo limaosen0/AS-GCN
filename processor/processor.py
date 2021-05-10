@@ -8,9 +8,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 import torchlight
-from torchlight import str2bool
-from torchlight import DictAction
-from torchlight import import_class
+from torchlight.io import str2bool
+from torchlight.io import DictAction
+from torchlight.io import import_class
 
 from .io import IO
 

@@ -140,4 +140,5 @@ if __name__ == '__main__':
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
             print(b, sn)
-            gendata(arg.data_path, out_path, arg.ignored_sample_path, benchmark=b, part=sn)
+            #gendata(arg.data_path, out_path, arg.ignored_sample_path, benchmark=b, part=sn)
+            gendata(arg.data_path, out_path, arg.ignored_sample_path, benchmark=b, set_name=sn)

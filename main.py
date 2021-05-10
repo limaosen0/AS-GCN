@@ -1,7 +1,7 @@
 import argparse
 import sys
 import torchlight
-from torchlight import import_class
+from torchlight.io import import_class
 
 
 if __name__ == '__main__':
@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     processors = dict()
     processors['recognition'] = import_class('processor.recognition.REC_Processor')
-    processors['demo'] = import_class('processor.demo.Demo')
+    #processors['demo'] = import_class('processor.demo.Demo')
 
     subparsers = parser.add_subparsers(dest='processor')
     for k, p in processors.items():

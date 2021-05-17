@@ -50,13 +50,12 @@ class Model(nn.Module):
         self.fcn = nn.Conv2d(256, num_class, kernel_size=1)
 
     def forward(self, x, x_target, x_last, A_act, lamda_act):
-
         N, C, T, V, M = x.size()
         x_recon = x[:,:,:,:,0]                                  # [2N, 3, 300, 25]  wsx: x_recon(4,3,290,25) select the first person data?
         x = x.permute(0, 4, 3, 1, 2).contiguous()               # [N, 2, 25, 3, 300] wsx: x(4,2,25,3,290)
         x = x.view(N * M, V * C, T)                             # [2N, 75, 300]m wsx: x(8,75,290)
 
-        x_last = x_last.permute(0,4,1,2,3).contiguous().view(-1,3,1,25)  #(8,3,1,25)
+        x_last = x_last.permute(0,4,1,2,3).contiguous().view(-1,3,1,25)  #(2N,3,1,25)
         
         x_bn = self.data_bn(x)
         x_bn = x_bn.view(N, M, V, C, T)
@@ -76,8 +75,6 @@ class Model(nn.Module):
 
         x_class = F.avg_pool2d(h8, h8.size()[2:])  #(8,256,1,1)
         x_class = x_class.view(N, M, -1, 1, 1).mean(dim=1) #(4,256,1,1)
-        #x_class = x_class.view(N, M, -1, 1, 1) #(4,2,256,1,1)
-        #x_class = x_class.mean(dim=1) #(4,256,1,1)
         x_class = self.fcn(x_class) #(4,60,1,1)  Conv2d(256, 60, kernel_size=(1, 1), stride=(1, 1))
         x_class = x_class.view(x_class.size(0), -1) #(4,60)
 

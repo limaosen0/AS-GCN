@@ -86,7 +86,7 @@ class REC_Processor(Processor):
         return neg_log_p.sum() / (target.size(0) * target.size(1))
 
     def kl_categorical(self, preds, log_prior, num_node, eps=1e-16):
-        kl_div = preds*(torch.log(preds+eps)-log_prior)
+        kl_ddiv = preds*(torch.log(preds+eps)-log_prior)
         return kl_div.sum()/(num_node*preds.size(0))
 
 

@@ -38,7 +38,7 @@ model2_args:
   node_num: 25
 
 weight_decay: 0.0001
-base_lr1: 0.1
+base_lr1: 0.0076
 base_lr2: 0.0005
 step: [50, 70, 90]
 

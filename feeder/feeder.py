@@ -51,7 +51,7 @@ class Feeder(torch.utils.data.Dataset):
             self.data = self.data[0:100]
             self.sample_name = self.sample_name[0:100]
 
-        self.N, self.C, self.T, self.V, self.M = self.data.shape
+        self.N, self.C, self.T, self.V, self.M = self.data.shape # (40091, 3, 300, 25, 2)
 
     def __len__(self):
         return len(self.label)

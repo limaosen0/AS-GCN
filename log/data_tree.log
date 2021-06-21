@@ -1,0 +1,16 @@
+data
+|-- NTU-RGB+D
+|   `-- samples_with_missing_skeletons.txt
+`-- nturgb_d
+    |-- xsub
+    |   |-- train_data_joint_pad.npy
+    |   |-- train_label.pkl
+    |   |-- val_data_joint_pad.npy
+    |   `-- val_label.pkl
+    `-- xview
+        |-- train_data_joint_pad.npy
+        |-- train_label.pkl
+        |-- val_data_joint_pad.npy
+        `-- val_label.pkl
+
+4 directories, 9 files

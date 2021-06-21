@@ -8,9 +8,9 @@ import torch
 import torch.nn as nn
 
 import torchlight
-from torchlight import str2bool
-from torchlight import DictAction
-from torchlight import import_class
+from torchlight.io import str2bool
+from torchlight.io import DictAction
+from torchlight.io import import_class
 
 
 class IO():
@@ -48,13 +48,13 @@ class IO():
         self.save_dir = os.path.join(self.arg.work_dir,
                                      self.arg.max_hop_dir,
                                      self.arg.lamda_act_dir)
-        self.io = torchlight.IO(self.save_dir, save_log=self.arg.save_log, print_log=self.arg.print_log)
+        self.io = torchlight.io.IO(self.save_dir, save_log=self.arg.save_log, print_log=self.arg.print_log)
         self.io.save_arg(self.arg)
 
         # gpu
         if self.arg.use_gpu:
-            gpus = torchlight.visible_gpu(self.arg.device)
-            torchlight.occupy_gpu(gpus)
+            gpus = torchlight.gpu.visible_gpu(self.arg.device)
+            #torchlight.occupy_gpu(gpus)
             self.gpus = gpus
             self.dev = "cuda:0"
         else:
@@ -68,11 +68,13 @@ class IO():
         if self.arg.weights1:
             self.model1 = self.io.load_weights(self.model1, self.arg.weights1, self.arg.ignore_weights)
             self.model2 = self.io.load_weights(self.model2, self.arg.weights2, self.arg.ignore_weights)
+            #self.model3 = self.io.load_weights(self.model3, self.arg.weights3, self.arg.ignore_weights)
 
     def gpu(self):
         # move modules to gpu
         self.model1 = self.model1.to(self.dev)
         self.model2 = self.model2.to(self.dev)
+        self.model3 = self.model3.to(self.dev)
         for name, value in vars(self).items():
             cls_name = str(value.__class__)
             if cls_name.find('torch.nn.modules') != -1:

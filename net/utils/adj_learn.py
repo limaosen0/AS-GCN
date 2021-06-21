@@ -250,6 +250,7 @@ class AdjacencyLearn(nn.Module):
 				m.bias.data.zero_()
 
 	def forward(self, inputs): # [N, 3, 50, 25, 2]
+		print("enter AdjacencyLearn")
 
 		N, C, T, V, M = inputs.size()
 		x = inputs.permute(0, 4, 3, 1, 2).contiguous() # [N, 2, 25, 3, 50]

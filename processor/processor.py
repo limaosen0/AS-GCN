@@ -6,6 +6,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
+import pickle
 
 import torchlight
 from torchlight.io import str2bool
@@ -22,7 +24,7 @@ class Processor(IO):
         self.load_arg(argv)
         self.init_environment()
         self.load_model()
-        self.load_weights()
+        #self.load_weights()
         self.gpu()
         self.load_data()
 
@@ -33,6 +35,8 @@ class Processor(IO):
         self.iter_info = dict()
         self.epoch_info = dict()
         self.meta_info = dict(epoch=0, iter=0)
+        self.epoch_loss_class_train = []
+        self.epoch_loss_class_test = []
 
 
     def load_data(self):
@@ -58,6 +62,18 @@ class Processor(IO):
         if self.arg.pavi_log:
             self.io.log('train', self.meta_info['iter'], self.epoch_info)
 
+
+    def show_epoch_curl(self, epoch):
+        plt.figure()
+        epoch_x = np.arange(10, len(loss_class_value)) + 1
+        plt.plot(epoch_x, loss_class_value[3:], '--', color='C0')
+        plt.legend(['action_class_train'])
+        plt.ylabel('action CrossEntropyLoss')
+        plt.xlabel('Epoch')
+        plt.xlim((3, epoch))
+        plt.savefig(os.path.join('loss_action_class_task.png'))
+        plt.close()
+
     def show_iter_info(self):
         if self.meta_info['iter'] % self.arg.log_interval == 0:
             info ='\tIter {} Done.'.format(self.meta_info['iter'])
@@ -73,7 +89,7 @@ class Processor(IO):
                 self.io.log('train', self.meta_info['iter'], self.iter_info)
 
     def train(self):
-        for _ in range(100):
+        for _ in range(300):
             self.iter_info['loss'] = 0
             self.iter_info['loss_class'] = 0
             self.iter_info['loss_recon'] = 0
@@ -113,19 +129,29 @@ class Processor(IO):
 
                 # save model
                 if ((epoch + 1) % self.arg.save_interval == 0) or (epoch + 1 == self.arg.num_epoch):
+                    """
                     filename1 = 'epoch{}_model1.pt'.format(epoch)
                     self.io.save_model(self.model1, filename1)
                     filename2 = 'epoch{}_model2.pt'.format(epoch)
                     self.io.save_model(self.model2, filename2)
+                    """
+                    filename3 = 'epoch{}_model3.pt'.format(epoch)
+                    self.io.save_model(self.model3, filename3)
+
+                    with open("epoch_loss_class_train.txt", "w") as outfile:
+                        for item in self.epoch_loss_class_train:
+                            outfile.write("{}: {}\n".format(self.epoch_info, item))
 
                 # evaluation
                 if ((epoch + 1) % self.arg.eval_interval == 0) or (epoch + 1 == self.arg.num_epoch):
                     self.io.print_log('Eval epoch: {}'.format(epoch))
-                    if epoch <= 10:
-                        self.test(testing_A=True)
-                    else:
-                        self.test(testing_A=False)
-                    self.io.print_log('Done.') 
+                    self.test(testing_A=False)
+                    self.io.print_log('Done.')
+
+                    with open("epoch_loss_class_test.txt", "w") as outfile:
+                        for item in self.epoch_loss_class_test:
+                            outfile.write("{}: {}\n".format(self.epoch_info, item))
+
 
 
         elif self.arg.phase == 'test':

@@ -2,9 +2,6 @@ name: asgcn
 channels:
   - pytorch
   - https://mirrors.ustc.edu.cn/anaconda/pkgs/main
-  - https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
-  - https://mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
@@ -79,10 +76,10 @@ dependencies:
     - imageio==2.9.0
     - numpy==1.19.5
     - opencv-python==4.5.1.48
-    - pyyaml==5.4.1
+    - pyyaml==6.0
     - scikit-video==1.1.11
     - scipy==1.5.4
-    - torch==1.7.1
-    - torchvision==0.9.0
+    - torch==1.8.1+cu111
+    - torchvision==0.9.1+cu111
     - tqdm==4.60.0
     - typing-extensions==3.7.4.3

@@ -31,7 +31,7 @@ class IO():
         if p.config is not None:
             # load config file
             with open(p.config, 'r') as f:
-                default_arg = yaml.load(f)
+                default_arg = yaml.safe_load(f)
 
             # update parser from config file
             key = vars(p).keys()

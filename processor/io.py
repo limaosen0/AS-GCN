@@ -8,9 +8,9 @@ import torch
 import torch.nn as nn
 
 import torchlight
-from torchlight import str2bool
-from torchlight import DictAction
-from torchlight import import_class
+from torchlight.io import str2bool
+from torchlight.io import DictAction
+from torchlight.io import import_class
 
 
 class IO():
@@ -31,7 +31,7 @@ class IO():
         if p.config is not None:
             # load config file
             with open(p.config, 'r') as f:
-                default_arg = yaml.load(f)
+                default_arg = yaml.safe_load(f)
 
             # update parser from config file
             key = vars(p).keys()
@@ -48,13 +48,13 @@ class IO():
         self.save_dir = os.path.join(self.arg.work_dir,
                                      self.arg.max_hop_dir,
                                      self.arg.lamda_act_dir)
-        self.io = torchlight.IO(self.save_dir, save_log=self.arg.save_log, print_log=self.arg.print_log)
+        self.io = torchlight.io.IO(self.save_dir, save_log=self.arg.save_log, print_log=self.arg.print_log)
         self.io.save_arg(self.arg)
 
         # gpu
         if self.arg.use_gpu:
-            gpus = torchlight.visible_gpu(self.arg.device)
-            torchlight.occupy_gpu(gpus)
+            gpus = torchlight.gpu.visible_gpu(self.arg.device)
+            #torchlight.occupy_gpu(gpus)
             self.gpus = gpus
             self.dev = "cuda:0"
         else:
